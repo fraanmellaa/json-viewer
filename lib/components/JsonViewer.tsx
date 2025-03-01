@@ -66,6 +66,16 @@ const JsonViewer: React.FC<JsonViewerProps> = ({
   };
 
   const getNodeId = (key: string): string => [...path, key].join(".");
+
+  const formatValue = (
+    value: string | number | boolean | null | []
+  ): JSX.Element | string => {
+    if (Array.isArray(value)) {
+      return getPreview(value);
+    }
+    return JSON.stringify(value);
+  };
+
   const getPreview = (
     value: Record<string, JsonData> | JsonData[]
   ): JSX.Element => {
@@ -201,8 +211,8 @@ const JsonViewer: React.FC<JsonViewerProps> = ({
                           value as Record<string, JsonData> | JsonData[]
                         )
                       : ""
-                    : getPreview(
-                        value as Record<string, JsonData> | JsonData[]
+                    : formatValue(
+                        value as string | number | boolean | null | []
                       )}
                 </span>
               </div>
