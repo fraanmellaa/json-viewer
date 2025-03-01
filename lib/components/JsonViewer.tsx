@@ -1,15 +1,20 @@
 import { useState } from "react";
 
 interface JsonViewerProps {
-  data:
-    | Record<string, string | number | boolean | null | JsonData>
-    | Array<Record<string, string | number | boolean | null | JsonData>>;
+  data: Record<string, JsonData> | JsonData[];
   depth?: number;
   path?: string[];
   ui?: JsonViewerUI;
 }
 
-type JsonData = { [key: string]: string | number | boolean | null | JsonData };
+type JsonData =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | JsonData[]
+  | { [key: string]: JsonData };
 
 type FontStyle = {
   family?: string;
@@ -41,7 +46,14 @@ const JsonViewer: React.FC<JsonViewerProps> = ({
 
   const isExpandable = (
     value: string | number | boolean | null | JsonData
-  ): boolean => typeof value === "object" && value !== null;
+  ): boolean => {
+    if (Array.isArray(value) && !value.length) return false;
+    return (
+      typeof value === "object" &&
+      value !== null &&
+      Object.keys(value).length > 0
+    );
+  };
 
   const toggleExpand = (key: string) => {
     const newExpanded = new Set(expanded);
@@ -54,7 +66,9 @@ const JsonViewer: React.FC<JsonViewerProps> = ({
   };
 
   const getNodeId = (key: string): string => [...path, key].join(".");
-  const getPreview = (value: JsonData | Array<JsonData>): JSX.Element => {
+  const getPreview = (
+    value: Record<string, JsonData> | JsonData[]
+  ): JSX.Element => {
     const count = Array.isArray(value)
       ? value.length
       : Object.keys(value).length;
@@ -62,12 +76,10 @@ const JsonViewer: React.FC<JsonViewerProps> = ({
     const closingBrace = Array.isArray(value) ? "]" : "}";
     return (
       <span className="text-gray-500">
-        {openingBrace} {count} {count === 1 ? "item" : "items"} {closingBrace}
+        {openingBrace} {count} {count <= 1 ? "item" : "items"} {closingBrace}
       </span>
     );
   };
-  const formatValue = (value: string | number | boolean | null): string =>
-    JSON.stringify(value);
 
   const keyFont: FontStyle | undefined =
     ui?.font && "key" in ui.font ? ui.font.key : (ui?.font as FontStyle);
@@ -110,8 +122,20 @@ const JsonViewer: React.FC<JsonViewerProps> = ({
 
   return (
     <div
-      className={ui?.containerClass || "p-2 rounded-lg"}
-      style={{ backgroundColor: ui?.backgroundColor || "white" }}
+      className={
+        depth === 0
+          ? `${
+              ui?.containerClass ||
+              "p-4 rounded-md shadow-lg backdrop-blur-lg bg-white/30"
+            }`
+          : ""
+      }
+      style={{
+        backgroundColor:
+          depth === 0
+            ? ui?.backgroundColor || "rgba(255, 255, 255, 0.1)"
+            : "transparent",
+      }}
     >
       {Object.entries(formattedData).map(([key, value]) => {
         const nodeId = getNodeId(key);
@@ -173,9 +197,13 @@ const JsonViewer: React.FC<JsonViewerProps> = ({
                 >
                   {isExpandable(value)
                     ? !expanded.has(nodeId)
-                      ? getPreview(value as JsonData | Array<JsonData>)
+                      ? getPreview(
+                          value as Record<string, JsonData> | JsonData[]
+                        )
                       : ""
-                    : formatValue(value as string | number | boolean | null)}
+                    : getPreview(
+                        value as Record<string, JsonData> | JsonData[]
+                      )}
                 </span>
               </div>
             </div>
@@ -183,7 +211,7 @@ const JsonViewer: React.FC<JsonViewerProps> = ({
             {isExpandable(value) && expanded.has(nodeId) && (
               <div className="ml-4 pl-4 ">
                 <JsonViewer
-                  data={value as JsonData}
+                  data={value as Record<string, JsonData> | JsonData[]}
                   depth={depth + 1}
                   path={[...path, key]}
                   ui={ui}
