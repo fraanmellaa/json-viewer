@@ -13,7 +13,7 @@
       "import": "./dist/json-viewer.js",
       "require": "./dist/json-viewer.umd.cjs"
     },
-    "./dist/style.css": "./dist/style.css"
+    "./dist/main.css": "./dist/main.css"
   },
   "sideEffects": false,
   "repository": {
