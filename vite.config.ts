@@ -12,9 +12,10 @@ export default defineConfig({
     // library entry and output settings
     lib: {
       entry: resolve(__dirname, "lib/main.ts"),
-      name: "@franmella/json-viewer",
-      fileName: "@franmella/json-viewer",
+      name: "json-viewer",
+      fileName: "json-viewer",
     },
+    cssCodeSplit: true,
     // bundler options
     // externalize react-related imports
     rollupOptions: {

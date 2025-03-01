@@ -2,11 +2,11 @@ import { useState } from "react";
 
 interface JsonViewerProps {
   data:
-    | Array<Record<string, string | number | boolean | null | JsonData>>
-    | Record<string, string | number | boolean | null | JsonData>;
+    | Record<string, string | number | boolean | null | JsonData>
+    | Array<Record<string, string | number | boolean | null | JsonData>>;
   depth?: number;
   path?: string[];
-  styles?: JsonViewerStyles;
+  ui?: JsonViewerUI;
 }
 
 type JsonData = { [key: string]: string | number | boolean | null | JsonData };
@@ -17,20 +17,27 @@ type FontStyle = {
   size?: string;
 };
 
-type JsonViewerStyles = {
+type JsonViewerUI = {
   font?: { key?: FontStyle; value?: FontStyle } | FontStyle;
   keyColor?: string;
-  valueColor?: string;
+  valueColor?: string | { [key: string]: string };
+  nullColor?: string;
   backgroundColor?: string;
+  keyClass?: string;
+  valueClass?: string;
+  containerClass?: string;
 };
 
 const JsonViewer: React.FC<JsonViewerProps> = ({
   data,
   depth = 0,
   path = [],
-  styles,
+  ui,
 }) => {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  const formattedData =
+    depth === 0 && Array.isArray(data) ? { value: data } : data;
 
   const isExpandable = (
     value: string | number | boolean | null | JsonData
@@ -47,11 +54,15 @@ const JsonViewer: React.FC<JsonViewerProps> = ({
   };
 
   const getNodeId = (key: string): string => [...path, key].join(".");
-  const getPreview = (value: JsonData): JSX.Element => {
-    const count = Object.keys(value).length;
+  const getPreview = (value: JsonData | Array<JsonData>): JSX.Element => {
+    const count = Array.isArray(value)
+      ? value.length
+      : Object.keys(value).length;
+    const openingBrace = Array.isArray(value) ? "[" : "{";
+    const closingBrace = Array.isArray(value) ? "]" : "}";
     return (
       <span className="text-gray-500">
-        ({count} {count === 1 ? "item" : "items"})
+        {openingBrace} {count} {count === 1 ? "item" : "items"} {closingBrace}
       </span>
     );
   };
@@ -59,25 +70,55 @@ const JsonViewer: React.FC<JsonViewerProps> = ({
     JSON.stringify(value);
 
   const keyFont: FontStyle | undefined =
-    styles?.font && "key" in styles.font
-      ? styles.font.key
-      : (styles?.font as FontStyle);
+    ui?.font && "key" in ui.font ? ui.font.key : (ui?.font as FontStyle);
   const valueFont: FontStyle | undefined =
-    styles?.font && "value" in styles.font
-      ? styles.font.value
-      : (styles?.font as FontStyle);
+    ui?.font && "value" in ui.font ? ui.font.value : (ui?.font as FontStyle);
+
+  const getValueColor = (
+    value: string | number | boolean | null | JsonData,
+    ui?: JsonViewerUI
+  ): string => {
+    // Determine color for value based on type
+    if (value === null) {
+      return ui?.nullColor || "#ff7b72"; // Use nullColor if set
+    }
+
+    // Handle custom colors for different types
+    if (typeof value === "string") {
+      return ui?.valueColor &&
+        typeof ui.valueColor === "object" &&
+        ui.valueColor.string
+        ? (ui.valueColor.string as string)
+        : (ui?.valueColor as string) || "#79c0ff"; // Default color or specific string color
+    }
+    if (typeof value === "number") {
+      return ui?.valueColor &&
+        typeof ui.valueColor === "object" &&
+        ui.valueColor.number
+        ? ui.valueColor.number
+        : "#d4de80"; // Default color for numbers
+    }
+    if (typeof value === "boolean") {
+      return ui?.valueColor &&
+        typeof ui.valueColor === "object" &&
+        ui.valueColor.boolean
+        ? ui.valueColor.boolean
+        : "#ffcc66"; // Default color for booleans
+    }
+    return "inherit";
+  };
 
   return (
     <div
-      className="p-2 rounded-lg"
-      style={{ backgroundColor: styles?.backgroundColor || "white" }}
+      className={ui?.containerClass || "p-2 rounded-lg"}
+      style={{ backgroundColor: ui?.backgroundColor || "white" }}
     >
-      {Object.entries(data).map(([key, value]) => {
+      {Object.entries(formattedData).map(([key, value]) => {
         const nodeId = getNodeId(key);
         return (
           <div key={nodeId} className="mb-1">
             <div
-              className={`flex items-center py-1 group ${
+              className={`flex items-start py-1 group ${
                 isExpandable(value) ? "cursor-pointer" : ""
               }`}
               onClick={() => isExpandable(value) && toggleExpand(nodeId)}
@@ -111,28 +152,28 @@ const JsonViewer: React.FC<JsonViewerProps> = ({
               <div className="flex-1">
                 <span
                   style={{
-                    color: styles?.keyColor || "#2563eb",
+                    color: ui?.keyColor || "#2563eb",
                     fontFamily: keyFont?.family,
                     fontWeight: keyFont?.weight,
                     fontSize: keyFont?.size,
                   }}
-                  className="font-semibold"
+                  className={ui?.keyClass || "font-semibold"}
                 >
                   {key}
                 </span>
                 <span className="mx-1 text-gray-500">:</span>
                 <span
                   style={{
-                    color: styles?.valueColor || "#111827",
+                    color: getValueColor(value, ui),
                     fontFamily: valueFont?.family,
                     fontWeight: valueFont?.weight,
                     fontSize: valueFont?.size,
                   }}
-                  className="break-all"
+                  className={ui?.valueClass || "break-all"}
                 >
                   {isExpandable(value)
                     ? !expanded.has(nodeId)
-                      ? getPreview(value as JsonData)
+                      ? getPreview(value as JsonData | Array<JsonData>)
                       : ""
                     : formatValue(value as string | number | boolean | null)}
                 </span>
@@ -140,12 +181,12 @@ const JsonViewer: React.FC<JsonViewerProps> = ({
             </div>
 
             {isExpandable(value) && expanded.has(nodeId) && (
-              <div className="ml-4 pl-4 border-l border-gray-400 ">
+              <div className="ml-4 pl-4 ">
                 <JsonViewer
                   data={value as JsonData}
                   depth={depth + 1}
                   path={[...path, key]}
-                  styles={styles}
+                  ui={ui}
                 />
               </div>
             )}

@@ -1,22 +1,30 @@
 import { JsonViewer } from "@franmella/json-viewer";
 
 function App() {
-  const styles = {
-    keyColor: "#d63384",
-    valueColor: "#384fe4",
-    backgroundColor: "#f3f4f6",
+  const ui = {
     font: {
       key: {
-        family: "monospace",
+        family: "Arial, sans-serif",
         weight: "bold",
-        size: "14px",
+        size: "16px",
       },
       value: {
-        family: "monospace",
+        family: "Courier New, monospace",
         weight: "normal",
         size: "14px",
       },
     },
+    keyColor: "#2563eb",
+    valueColor: {
+      string: "#79c0ff",
+      number: "#d4de80",
+      boolean: "#ffcc66",
+    },
+    nullColor: "#ff7b72",
+    backgroundColor: "rgba(255, 255, 255, 0.1)", // Fondo semitransparente
+    keyClass: "text-xl",
+    valueClass: "text-lg",
+    containerClass: "p-4 rounded-md shadow-lg backdrop-blur-lg bg-white/30", // Aplicación de glassmorphism
   };
 
   const sampleJson = [
@@ -238,7 +246,7 @@ function App() {
         city: "Lebsackbury",
         zipcode: "31428-2261",
         geo: {
-          lat: "-38.2386",
+          lat: null,
           lng: "57.2232",
         },
       },
@@ -254,7 +262,7 @@ function App() {
 
   return (
     <>
-      <JsonViewer data={sampleJson} styles={styles} />
+      <JsonViewer data={sampleJson} ui={ui} />
     </>
   );
 }

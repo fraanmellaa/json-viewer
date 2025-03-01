@@ -1,21 +1,25 @@
 {
   "name": "@franmella/json-viewer",
-  "version": "1.0.0",
+  "version": "2.2.0",
   "type": "module",
   "files": [
     "dist"
   ],
   "private": false,
-  "main": "./dist/fm-json-viewer.umd.cjs",
-  "module": "./dist/fm-json-viewer.js",
+  "main": "./dist/json-viewer.umd.cjs",
+  "module": "./dist/json-viewer.js",
   "exports": {
     ".": {
-      "import": "./dist/fm-json-viewer.js",
-      "require": "./dist/fm-json-viewer.umd.cjs"
+      "import": "./dist/json-viewer.js",
+      "require": "./dist/json-viewer.umd.cjs"
     },
     "./dist/style.css": "./dist/style.css"
   },
   "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fraanmellaa/json-viewer.git"
+  },
   "scripts": {
     "dev": "vite",
     "prebuild": "rm -rf dist",
