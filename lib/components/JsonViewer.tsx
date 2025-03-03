@@ -132,14 +132,14 @@ const JsonViewer: React.FC<JsonViewerProps> = ({
 
   return (
     <div
-      className={
+      className={`${
         depth === 0
           ? `${
               ui?.containerClass ||
               "p-4 rounded-md shadow-lg backdrop-blur-lg bg-white/30"
             }`
           : ""
-      }
+      } break-all`}
       style={{
         backgroundColor:
           depth === 0
