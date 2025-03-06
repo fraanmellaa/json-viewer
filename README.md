@@ -1,7 +1,7 @@
 <div align="center">
   <a href="https://sharejson.franmella.dev">
     <img
-      src="https://sharejson.franmella.dev/favicon.png"
+      src="https://sharejson.franmella.dev/favicon/favicon.png"
       alt="@franmella/json-viewer"
       height="60"
     />
